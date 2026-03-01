@@ -39,19 +39,17 @@ public class UiSteps {
 
     @Then("selected product should match detail page")
     public void selectedProductShouldMatchDetailPage() {
-
+        detailPage.isSameProduct(selectedProductName);
     }
 
     @When("user goes to reviews tab and sorts by newest")
     public void userGoesToReviewsTab() {
-
         detailPage.goToReviewsTab();
 
         if (detailPage.hasReviews()) {
             detailPage.sortByNewest();
             detailPage.clickRandomThumb();
-
+            detailPage.isThankYouMessageDisplayed();
         }
-        // Eğer yorum yoksa hiçbir şey yapılmaz (requirement'a uygun)
     }
 }

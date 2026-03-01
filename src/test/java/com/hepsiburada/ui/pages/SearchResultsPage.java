@@ -35,7 +35,7 @@ public class SearchResultsPage {
             selectedProductName = productArray.get(randomIndex).getText();
         }
 
-        // Taze referansla tıkla
+
         List<WebElement> freshArray = driver.findElements(productList);
         WebElement target = freshArray.get(randomIndex);
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", target);

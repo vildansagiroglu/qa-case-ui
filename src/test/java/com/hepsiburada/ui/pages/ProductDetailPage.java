@@ -17,8 +17,7 @@ public class ProductDetailPage {
     // Ürün başlığı
     private final By productTitle = By.cssSelector("h1");
 
-    // === DEĞERLENDİRMELER TAB ===
-    // Senin DevTools ekranında net var: role=tab + aria-controls="Reviews"
+    // DEĞERLENDİRMELER TAB
     private final By reviewsTabPrimary = By.cssSelector("button[role='tab'][aria-controls='Reviews']");
 
     // Fallback: aria-label içinde Değerlendirmeler
@@ -29,7 +28,7 @@ public class ProductDetailPage {
     // Tab bar (varsa)
     private final By tabList = By.cssSelector("[role='tablist']");
 
-    // === SIRALA DROPDOWN ===
+    // SIRALA DROPDOWN
     // “Sırala” alanındaki “Varsayılan” (class’lar değişken olduğu için text bazlı)
     private final By sortDropdown = By.xpath(
             "//*[normalize-space()='Sırala']/following::div[normalize-space()='Varsayılan'][1]"
@@ -37,16 +36,11 @@ public class ProductDetailPage {
 
     private final By newestOption = By.xpath("//*[normalize-space()='En yeni değerlendirme']");
 
-    // === THUMB BUTONLARI ===
-    // Hepsiburada’da genelde aria-label “Faydalı / Faydalı değil” oluyor
-    private final By thumbButtons = By.xpath(
-            "//button[contains(@aria-label,'Faydalı') or contains(@aria-label,'faydalı') " +
-                    "or contains(@aria-label,'Faydalı değil') or contains(@aria-label,'faydalı değil') " +
-                    "or contains(@data-test-id,'thumb') or contains(@data-testid,'thumb')]"
-    );
+    // THUMB BUTONLARI
+    private final By thumbButtons = By.cssSelector("div.thumbsUp, div.thumbsDown");
 
     private final By thankYouText = By.xpath(
-            "//*[contains(normalize-space(.),'Teşekkür') or contains(normalize-space(.),'teşekkür')]"
+            "//*[normalize-space(.)='Teşekkür Ederiz.' or normalize-space(.)='Teşekkür ederiz.']"
     );
 
     public ProductDetailPage() {
@@ -75,15 +69,13 @@ public class ProductDetailPage {
         }
     }
 
-    // =========================
-    // ASIL SORUNUN ÇÖZÜMÜ BURASI
-    // =========================
+
     public void goToReviewsTab() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(productTitle));
         waitForPageToSettle();
 
         // Sayfada “Değerlendirmeler” tab’ı genelde aşağıda.
-        // Bulana kadar kontrollü scroll yapacağız.
+        // Bulana kadar kontrollü scroll yap
         for (int i = 0; i < 14; i++) { // 14 * ~600px = bayağı aşağı
             closeLiveChatIfPresent();
 
@@ -93,8 +85,7 @@ public class ProductDetailPage {
                 closeLiveChatIfPresent();
                 clickSafe(tab);
 
-                // tıkladıktan sonra Reviews içeriğinin gelmesini bekleyelim:
-                // en azından Sort dropdown ya da thumb’lardan biri görünür hale gelsin.
+                // tıkladıktan sonra Reviews içeriğinin gelmesini bekle
                 wait.until(d ->
                         d.findElements(sortDropdown).size() > 0 ||
                                 d.findElements(thumbButtons).size() > 0 ||
@@ -144,6 +135,16 @@ public class ProductDetailPage {
 
         scrollIntoViewCenter(btn);
         clickSafe(btn);
+
+        // Teşekkür yazısını bekle ve ekranda göster
+        try {
+            WebElement thankYou = new WebDriverWait(driver, Duration.ofSeconds(5))
+                    .until(ExpectedConditions.visibilityOfElementLocated(thankYouText));
+            scrollIntoViewCenter(thankYou);
+            waitShort(3000);
+        } catch (Exception e) {
+            waitShort(2000);
+        }
     }
 
     public boolean isThankYouMessageDisplayed() {
@@ -154,7 +155,7 @@ public class ProductDetailPage {
         }
     }
 
-    // ============ HELPERS ============
+    // HELPERS
 
     private WebElement findReviewsTabIfPresent() {
         List<WebElement> p = driver.findElements(reviewsTabPrimary);
@@ -163,13 +164,12 @@ public class ProductDetailPage {
         List<WebElement> f = driver.findElements(reviewsTabFallback);
         if (!f.isEmpty()) return f.get(0);
 
-        // Bazı ürünlerde tablist önce gelmiyor; ama gelirse de fark etmez:
+
         return null;
     }
 
     private void closeLiveChatIfPresent() {
-        // Senin screenshot’ta sağ panel “Canlı uzman” ve X ikonlu.
-        // En stabil yaklaşım: aria-label close/kapat/popup + data-testid close
+
         By[] candidates = new By[] {
                 By.cssSelector("button[aria-label*='kapat' i]"),
                 By.cssSelector("button[aria-label*='close' i]"),

@@ -15,9 +15,9 @@ public class Hooks {
     @After
     public void afterScenario(Scenario scenario) {
         if (scenario.isFailed()) {
-            // Fail olunca kapatma ki ekranda neye takıldığını görelim
             return;
         }
+        try { Thread.sleep(5000); } catch (InterruptedException ignored) {}
         DriverFactory.quitDriver();
     }
 }

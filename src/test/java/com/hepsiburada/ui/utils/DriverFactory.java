@@ -18,10 +18,10 @@ public class DriverFactory {
 
             ChromeOptions options = new ChromeOptions();
 
-            // Bildirim izni popup'ını KESİN engelle
+            // Bildirim izni popup engelle
             Map<String, Object> prefs = new HashMap<>();
-            prefs.put("profile.default_content_setting_values.notifications", 2); // 2=block
-            prefs.put("profile.default_content_setting_values.geolocation", 2);   // 2=block (konum da çıkabiliyor)
+            prefs.put("profile.default_content_setting_values.notifications", 2);
+            prefs.put("profile.default_content_setting_values.geolocation", 2);
             options.setExperimentalOption("prefs", prefs);
 
             // Stabil argümanlar

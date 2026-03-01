@@ -13,10 +13,10 @@ public class HomePage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    // Net: input'un kendisi (sen console'da doğruladın)
+
     private final By searchInput = By.cssSelector("input[data-test-id='search-bar-input']");
 
-    // Cookie kabul butonu (button içinde yazı arıyoruz)
+    // Cookie kabul butonu
     private final By acceptCookiesBtn = By.xpath(
             "//button[.//*[contains(normalize-space(.),'Kabul') or contains(normalize-space(.),'Accept')] or " +
                     "contains(normalize-space(.),'Kabul et') or contains(normalize-space(.),'Accept')]"
@@ -37,13 +37,7 @@ public class HomePage {
         wait.until(ExpectedConditions.presenceOfElementLocated(searchInput));
     }
 
-    /**
-     * CLICK'e güvenmeden arama:
-     * - focus ver
-     * - value'yu native setter ile set et
-     * - input event dispatch
-     * - Enter keydown dispatch
-     */
+
     public void search(String keyword) {
         acceptCookiesIfPresent();
 
