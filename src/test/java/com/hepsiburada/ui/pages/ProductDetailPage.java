@@ -34,9 +34,13 @@ public class ProductDetailPage {
             "//*[normalize-space()='Sırala']/following::div[normalize-space()='Varsayılan'][1]"
     );
 
+    // Lower-cases text in XPath 1.0 so "En yeni" and "En Yeni" both match
+    private static final String LOWER =
+            "translate(normalize-space(.),'ABCÇDEFGĞHIİJKLMNOÖPRSŞTUÜVYZ','abcçdefgğhiijklmnoöprsştuüvyz')";
+
     // Deepest element whose text contains "En yeni" (newest first), robust to small label changes
     private final By newestOption = By.xpath(
-            "//*[contains(normalize-space(.),'En yeni') and not(*[contains(normalize-space(.),'En yeni')])]"
+            "//*[contains(" + LOWER + ",'en yeni') and not(*[contains(" + LOWER + ",'en yeni')])]"
     );
 
     // Cookie consent banner: OneTrust id first, text-based fallback
