@@ -55,6 +55,8 @@ public class ProductDetailPage {
             "//*[contains(" + LOWER + ",'teşekkür') and not(*[contains(" + LOWER + ",'teşekkür')])]"
     );
 
+    private boolean thankYouSeen;
+
     public ProductDetailPage() {
         this.driver = DriverFactory.getDriver();
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(20));
@@ -180,17 +182,23 @@ public class ProductDetailPage {
         scrollIntoViewCenter(btn);
         clickSafe(btn);
 
-        // Wait for the "thank you" confirmation; the step asserts it afterwards
+        // The "thank you" toast disappears after a moment, so capture it right after the click
+        // with fast polling and remember the result for the Then step
+        thankYouSeen = false;
         try {
-            WebElement thankYou = new WebDriverWait(driver, Duration.ofSeconds(8))
+            new WebDriverWait(driver, Duration.ofSeconds(8), Duration.ofMillis(100))
                     .until(ExpectedConditions.visibilityOfElementLocated(thankYouText));
-            scrollIntoViewCenter(thankYou);
+            thankYouSeen = true;
         } catch (TimeoutException ignored) {
             // isThankYouMessageDisplayed() reports the failure
         }
     }
 
+    /** True if the confirmation appeared after the last rating click (it is a short-lived toast). */
     public boolean isThankYouMessageDisplayed() {
+        if (thankYouSeen) {
+            return true;
+        }
         try {
             return driver.findElements(thankYouText).stream().anyMatch(WebElement::isDisplayed);
         } catch (Exception e) {
