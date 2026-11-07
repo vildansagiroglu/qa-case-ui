@@ -11,6 +11,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import java.time.Duration;
 import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 public class SearchResultsPage {
 
@@ -40,8 +41,27 @@ public class SearchResultsPage {
         WebElement target = freshArray.get(randomIndex);
         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", target);
         try { Thread.sleep(300); } catch (InterruptedException ignored) {}
+        Set<String> handlesBefore = driver.getWindowHandles();
+        String resultsUrl = driver.getCurrentUrl();
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", target);
 
+        switchToProductTab(handlesBefore, resultsUrl);
         return selectedProductName;
+    }
+
+    /**
+     * Hepsiburada opens a product in a new browser tab. Selenium stays on the old tab
+     * unless we switch, so wait for either a new tab or a navigation in the same tab.
+     */
+    private void switchToProductTab(Set<String> handlesBefore, String resultsUrl) {
+        wait.until(d -> d.getWindowHandles().size() > handlesBefore.size()
+                || !d.getCurrentUrl().equals(resultsUrl));
+
+        for (String handle : driver.getWindowHandles()) {
+            if (!handlesBefore.contains(handle)) {
+                driver.switchTo().window(handle);
+                return;
+            }
+        }
     }
 }
