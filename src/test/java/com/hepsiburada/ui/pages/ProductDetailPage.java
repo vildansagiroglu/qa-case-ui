@@ -14,29 +14,28 @@ public class ProductDetailPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    // Ürün başlığı
+    // Product title
     private final By productTitle = By.cssSelector("h1");
 
-    // DEĞERLENDİRMELER TAB
+    // Reviews tab ("Değerlendirmeler")
     private final By reviewsTabPrimary = By.cssSelector("button[role='tab'][aria-controls='Reviews']");
 
-    // Fallback: aria-label içinde Değerlendirmeler
+    // Fallback: match the tab by its visible text or aria-label
     private final By reviewsTabFallback = By.xpath(
             "//button[@role='tab' and (contains(@aria-label,'Değerlendirm') or contains(normalize-space(.),'Değerlendirm'))]"
     );
 
-    // Tab bar (varsa)
+    // Tab bar (if present)
     private final By tabList = By.cssSelector("[role='tablist']");
 
-    // SIRALA DROPDOWN
-    // “Sırala” alanındaki “Varsayılan” (class’lar değişken olduğu için text bazlı)
+    // Sort dropdown: located by text because CSS class names are generated and change
     private final By sortDropdown = By.xpath(
             "//*[normalize-space()='Sırala']/following::div[normalize-space()='Varsayılan'][1]"
     );
 
     private final By newestOption = By.xpath("//*[normalize-space()='En yeni değerlendirme']");
 
-    // THUMB BUTONLARI
+    // Helpful / not helpful buttons
     private final By thumbButtons = By.cssSelector("div.thumbsUp, div.thumbsDown");
 
     private final By thankYouText = By.xpath(
@@ -74,9 +73,9 @@ public class ProductDetailPage {
         wait.until(ExpectedConditions.visibilityOfElementLocated(productTitle));
         waitForPageToSettle();
 
-        // Sayfada “Değerlendirmeler” tab’ı genelde aşağıda.
-        // Bulana kadar kontrollü scroll yap
-        for (int i = 0; i < 14; i++) { // 14 * ~600px = bayağı aşağı
+        // The reviews tab is usually far down the page and lazy-loaded,
+        // so scroll step by step until it appears (max ~14 x 650px)
+        for (int i = 0; i < 14; i++) {
             closeLiveChatIfPresent();
 
             WebElement tab = findReviewsTabIfPresent();
@@ -85,7 +84,7 @@ public class ProductDetailPage {
                 closeLiveChatIfPresent();
                 clickSafe(tab);
 
-                // tıkladıktan sonra Reviews içeriğinin gelmesini bekle
+                // Wait until the reviews content is rendered
                 wait.until(d ->
                         d.findElements(sortDropdown).size() > 0 ||
                                 d.findElements(thumbButtons).size() > 0 ||
@@ -94,12 +93,12 @@ public class ProductDetailPage {
                 return;
             }
 
-            // Bulamadıysak aşağı kaydır
+            // Not found yet: scroll further down
             jsScrollBy(0, 650);
             waitShort(250);
         }
 
-        throw new TimeoutException("Değerlendirmeler tabı bulunamadı (scroll-loop sonrası).");
+        throw new TimeoutException("Reviews tab not found after scrolling the page");
     }
 
     public boolean hasReviews() {
@@ -136,14 +135,13 @@ public class ProductDetailPage {
         scrollIntoViewCenter(btn);
         clickSafe(btn);
 
-        // Teşekkür yazısını bekle ve ekranda göster
+        // Wait for the "thank you" confirmation; the step asserts it afterwards
         try {
             WebElement thankYou = new WebDriverWait(driver, Duration.ofSeconds(5))
                     .until(ExpectedConditions.visibilityOfElementLocated(thankYouText));
             scrollIntoViewCenter(thankYou);
-            waitShort(3000);
-        } catch (Exception e) {
-            waitShort(2000);
+        } catch (TimeoutException ignored) {
+            // isThankYouMessageDisplayed() reports the failure
         }
     }
 
@@ -221,7 +219,7 @@ public class ProductDetailPage {
     }
 
     private void waitForPageToSettle() {
-        // header vs yüklenme anında click’ler boşa gidiyor, kısa stabilize
+        // Clicks are lost while the header is still loading: give the page a short moment
         waitShort(800);
     }
 

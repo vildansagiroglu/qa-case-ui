@@ -3,19 +3,20 @@ package com.hepsiburada.ui.steps;
 import com.hepsiburada.ui.pages.HomePage;
 import com.hepsiburada.ui.pages.ProductDetailPage;
 import com.hepsiburada.ui.pages.SearchResultsPage;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.java.en.Given;
 
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assume.assumeTrue;
 
 public class UiSteps {
 
-    HomePage homePage = new HomePage();
-    SearchResultsPage resultsPage = new SearchResultsPage();
-    ProductDetailPage detailPage = new ProductDetailPage();
+    private final HomePage homePage = new HomePage();
+    private final SearchResultsPage resultsPage = new SearchResultsPage();
+    private final ProductDetailPage detailPage = new ProductDetailPage();
 
-    String selectedProductName;
+    private String selectedProductName;
 
     @Given("user visits hepsiburada homepage")
     public void userVisitsHepsiburadaHomepage() {
@@ -34,22 +35,35 @@ public class UiSteps {
 
     @Then("product detail page should be displayed")
     public void productDetailPageShouldBeDisplayed() {
-        assertTrue(detailPage.isProductPageLoaded());
+        assertTrue("Product detail page did not load", detailPage.isProductPageLoaded());
     }
 
     @Then("selected product should match detail page")
     public void selectedProductShouldMatchDetailPage() {
-        detailPage.isSameProduct(selectedProductName);
+        assertTrue("Detail page shows a different product than the one selected: " + selectedProductName,
+                detailPage.isSameProduct(selectedProductName));
     }
 
-    @When("user goes to reviews tab and sorts by newest")
-    public void userGoesToReviewsTab() {
+    @When("user opens the reviews tab")
+    public void userOpensReviewsTab() {
         detailPage.goToReviewsTab();
+        // A random product may have no reviews yet: skip the remaining steps instead of failing
+        assumeTrue("Selected product has no reviews, review steps skipped", detailPage.hasReviews());
+    }
 
-        if (detailPage.hasReviews()) {
-            detailPage.sortByNewest();
-            detailPage.clickRandomThumb();
-            detailPage.isThankYouMessageDisplayed();
-        }
+    @When("user sorts reviews by newest")
+    public void userSortsReviewsByNewest() {
+        detailPage.sortByNewest();
+    }
+
+    @When("user rates a random review as helpful or not helpful")
+    public void userRatesRandomReview() {
+        detailPage.clickRandomThumb();
+    }
+
+    @Then("a thank you message should be displayed")
+    public void thankYouMessageShouldBeDisplayed() {
+        assertTrue("Thank you message was not shown after rating a review",
+                detailPage.isThankYouMessageDisplayed());
     }
 }

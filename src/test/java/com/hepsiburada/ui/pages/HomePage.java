@@ -16,7 +16,7 @@ public class HomePage {
 
     private final By searchInput = By.cssSelector("input[data-test-id='search-bar-input']");
 
-    // Cookie kabul butonu
+    // Cookie consent button
     private final By acceptCookiesBtn = By.xpath(
             "//button[.//*[contains(normalize-space(.),'Kabul') or contains(normalize-space(.),'Accept')] or " +
                     "contains(normalize-space(.),'Kabul et') or contains(normalize-space(.),'Accept')]"
@@ -33,7 +33,7 @@ public class HomePage {
         acceptCookiesIfPresent();
         waitForPageReady();
 
-        // input DOM'a gelsin
+        // Wait until the search input is in the DOM
         wait.until(ExpectedConditions.presenceOfElementLocated(searchInput));
     }
 
@@ -46,10 +46,10 @@ public class HomePage {
             try {
                 waitForPageReady();
 
-                // Her denemede elementi yeniden bul (stale'i engeller)
+                // Re-locate the input on every attempt to avoid StaleElementReferenceException
                 WebElement input = wait.until(ExpectedConditions.presenceOfElementLocated(searchInput));
 
-                // JS ile focus + value set + event dispatch
+                // The input is re-rendered by React, so set the value and fire events via JS
                 ((JavascriptExecutor) driver).executeScript(
                         "const input = arguments[0];" +
                                 "input.scrollIntoView({block:'center'});" +
@@ -62,13 +62,13 @@ public class HomePage {
                         input, keyword
                 );
 
-                // Sonuç sayfasına geçti mi?
+                // Did we land on the results page?
                 wait.until(d -> {
                     String url = d.getCurrentUrl().toLowerCase();
                     return url.contains("ara") || url.contains("search");
                 });
 
-                return; // başarılı
+                return; // success
 
             } catch (StaleElementReferenceException | TimeoutException e) {
                 attempts++;
@@ -87,7 +87,7 @@ public class HomePage {
             WebElement btn = shortWait.until(ExpectedConditions.elementToBeClickable(acceptCookiesBtn));
             btn.click();
 
-            // cookie overlay kalksın diye kısa bekleme
+            // Short pause so the cookie overlay disappears
             sleep(300);
         } catch (Exception ignored) {
         }
