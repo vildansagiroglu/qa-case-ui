@@ -14,22 +14,22 @@ import java.util.Random;
 
 public class SearchResultsPage {
 
-     WebDriver driver = DriverFactory.getDriver();
-     WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
+    private final WebDriver driver = DriverFactory.getDriver();
+    private final WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(15));
 
-    private By productList = By.cssSelector("li[class*='productListContent'] a");
+    private final By productList = By.cssSelector("li[class*='productListContent'] a");
 
     public String selectRandomProduct() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(productList));
         wait.until(ExpectedConditions.numberOfElementsToBeMoreThan(productList, 0));
 
-        // Ürünleri array'e al
+        // Collect the product cards
         List<WebElement> productArray = driver.findElements(productList);
 
-        // Random seç (ilk 10'dan)
+        // Pick a random product from the first 10 results
         int randomIndex = new Random().nextInt(Math.min(productArray.size(), 10));
 
-        // Seçilen ürünün adını al — detay sayfasında karşılaştırılacak
+        // Keep the product name to compare it on the detail page
         String selectedProductName = productArray.get(randomIndex).getAttribute("title");
         if (selectedProductName == null || selectedProductName.isEmpty()) {
             selectedProductName = productArray.get(randomIndex).getText();
