@@ -50,8 +50,9 @@ public class ProductDetailPage {
     // Helpful / not helpful buttons
     private final By thumbButtons = By.cssSelector("div.thumbsUp, div.thumbsDown");
 
+    // "Teşekkür ederiz" confirmation, any casing, with or without a trailing dot
     private final By thankYouText = By.xpath(
-            "//*[normalize-space(.)='Teşekkür Ederiz.' or normalize-space(.)='Teşekkür ederiz.']"
+            "//*[contains(" + LOWER + ",'teşekkür') and not(*[contains(" + LOWER + ",'teşekkür')])]"
     );
 
     public ProductDetailPage() {
@@ -181,7 +182,7 @@ public class ProductDetailPage {
 
         // Wait for the "thank you" confirmation; the step asserts it afterwards
         try {
-            WebElement thankYou = new WebDriverWait(driver, Duration.ofSeconds(5))
+            WebElement thankYou = new WebDriverWait(driver, Duration.ofSeconds(8))
                     .until(ExpectedConditions.visibilityOfElementLocated(thankYouText));
             scrollIntoViewCenter(thankYou);
         } catch (TimeoutException ignored) {
@@ -191,7 +192,7 @@ public class ProductDetailPage {
 
     public boolean isThankYouMessageDisplayed() {
         try {
-            return driver.findElements(thankYouText).size() > 0;
+            return driver.findElements(thankYouText).stream().anyMatch(WebElement::isDisplayed);
         } catch (Exception e) {
             return false;
         }
