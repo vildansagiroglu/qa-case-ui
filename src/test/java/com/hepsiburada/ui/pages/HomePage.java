@@ -84,13 +84,28 @@ public class HomePage {
     private void acceptCookiesIfPresent() {
         try {
             WebDriverWait shortWait = new WebDriverWait(driver, Duration.ofSeconds(3));
-            WebElement btn = shortWait.until(ExpectedConditions.elementToBeClickable(acceptCookiesBtn));
+            // OneTrust consent button id first, text-based XPath as fallback
+            WebElement btn = shortWait.until(ExpectedConditions.or(
+                    ExpectedConditions.elementToBeClickable(By.id("onetrust-accept-btn-handler")),
+                    ExpectedConditions.elementToBeClickable(acceptCookiesBtn)))
+                    ? findFirstVisible(By.id("onetrust-accept-btn-handler"), acceptCookiesBtn)
+                    : null;
+            if (btn == null) return;
             btn.click();
 
             // Short pause so the cookie overlay disappears
             sleep(300);
         } catch (Exception ignored) {
         }
+    }
+
+    private WebElement findFirstVisible(By... locators) {
+        for (By by : locators) {
+            for (WebElement el : driver.findElements(by)) {
+                if (el.isDisplayed()) return el;
+            }
+        }
+        return null;
     }
 
     private void waitForPageReady() {

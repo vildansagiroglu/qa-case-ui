@@ -2,6 +2,7 @@ package com.hepsiburada.ui.pages;
 
 import com.hepsiburada.ui.utils.DriverFactory;
 import org.openqa.selenium.*;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
@@ -33,7 +34,14 @@ public class ProductDetailPage {
             "//*[normalize-space()='Sırala']/following::div[normalize-space()='Varsayılan'][1]"
     );
 
-    private final By newestOption = By.xpath("//*[normalize-space()='En yeni değerlendirme']");
+    // Deepest element whose text contains "En yeni" (newest first), robust to small label changes
+    private final By newestOption = By.xpath(
+            "//*[contains(normalize-space(.),'En yeni') and not(*[contains(normalize-space(.),'En yeni')])]"
+    );
+
+    // Cookie consent banner: OneTrust id first, text-based fallback
+    private final By acceptCookiesById = By.id("onetrust-accept-btn-handler");
+    private final By acceptCookiesByText = By.xpath("//button[contains(normalize-space(.),'Kabul Et')]");
 
     // Helpful / not helpful buttons
     private final By thumbButtons = By.cssSelector("div.thumbsUp, div.thumbsDown");
@@ -72,6 +80,8 @@ public class ProductDetailPage {
     public void goToReviewsTab() {
         wait.until(ExpectedConditions.visibilityOfElementLocated(productTitle));
         waitForPageToSettle();
+        // The product opens in a new tab where the cookie banner can cover the reviews controls
+        acceptCookiesIfPresent();
 
         // The reviews tab is usually far down the page and lazy-loaded,
         // so scroll step by step until it appears (max ~14 x 650px)
@@ -111,16 +121,46 @@ public class ProductDetailPage {
     }
 
     public void sortByNewest() {
+        acceptCookiesIfPresent();
         closeLiveChatIfPresent();
 
         WebElement dd = wait.until(ExpectedConditions.presenceOfElementLocated(sortDropdown));
         scrollIntoViewCenter(dd);
-        clickSafe(dd);
 
-        WebElement newest = wait.until(ExpectedConditions.elementToBeClickable(newestOption));
+        // Open the dropdown; retry with a real mouse click if the first click did not open it
+        clickSafe(dd);
+        if (!isVisibleWithin(newestOption, 4)) {
+            try {
+                new Actions(driver).moveToElement(dd).click().perform();
+            } catch (Exception ignored) {
+            }
+        }
+
+        WebElement newest = wait.until(ExpectedConditions.visibilityOfElementLocated(newestOption));
         clickSafe(newest);
 
         waitShort(700);
+    }
+
+    private void acceptCookiesIfPresent() {
+        for (By by : new By[]{acceptCookiesById, acceptCookiesByText}) {
+            List<WebElement> buttons = driver.findElements(by);
+            if (!buttons.isEmpty() && buttons.get(0).isDisplayed()) {
+                clickSafe(buttons.get(0));
+                waitShort(300);
+                return;
+            }
+        }
+    }
+
+    private boolean isVisibleWithin(By locator, int seconds) {
+        try {
+            new WebDriverWait(driver, Duration.ofSeconds(seconds))
+                    .until(ExpectedConditions.visibilityOfElementLocated(locator));
+            return true;
+        } catch (TimeoutException e) {
+            return false;
+        }
     }
 
     public void clickRandomThumb() {
